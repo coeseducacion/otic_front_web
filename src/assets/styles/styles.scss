@@ -1,0 +1,76 @@
+/* Encabezados de VDataTable usando la variable de tema de Vuetify.
+   Se fuerza sobre .v-theme--light / .v-theme--dark y se añade fallback. */
+.v-theme--light .v-data-table thead th,
+.v-theme--light .v-data-table__table thead th,
+.v-theme--light .v-data-table__wrapper thead th,
+.v-theme--dark .v-data-table thead th,
+.v-theme--dark .v-data-table__table thead th,
+.v-theme--dark .v-data-table__wrapper thead th {
+  background-color: rgb(49 49 64) !important;
+  border-block-end: 1px solid rgba(0, 0, 0, 12%) !important;
+  color: #fff !important;
+  font-size: 0.87em !important;
+  font-weight: 700 !important;
+  inset-block-start: 0 !important;
+  line-height: 1.43 !important;
+  padding-block: 3px !important;
+  padding-inline: auto !important;
+  text-align: center !important;
+}
+
+/* Alinear el contenido interno que Vuetify coloca dentro del th */
+.v-data-table thead th > *,
+.v-data-table__table thead th > *,
+.v-data-table__wrapper thead th > * {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* tamaño del texto del cuerpo de la tabla */
+.v-data-table tbody td,
+.v-data-table__table tbody td,
+.v-data-table__wrapper tbody td {
+  font-size: 0.87em !important;
+  line-height: 1.43 !important;
+}
+
+/* css para el card appactiona perzonalizado */
+.custom-app-card-actions {
+  background-color: #c00000 !important;
+  color: #fff !important;
+
+  .v-card-title {
+    color: white;
+  }
+}
+
+// // hijo v-card-tittle
+// .custom-app-card-actions .v-card-title {
+//   color: #fff !important;colorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolor
+// }
+// .custom-app-card-actions {
+//   background-color: #c00000;background-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-colorbackground-color
+
+//   .v-card-title {
+//     color: white;colorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolorcolor
+//   }
+// }
+
+.layout-nav-type-vertical .layout-vertical-nav .nav-link > .router-link-exact-active {
+  background-color: #c00000 !important;
+  box-shadow: 0 2px 6px rgba(var(--v-global-theme-primary), 0.3);
+}
+
+.v-card {
+  border-radius: 3px !important;
+}
+
+.layout-wrapper.layout-nav-type-vertical .layout-navbar .navbar-content-container {
+  border-radius: 3px !important;
+}
+
+.layout-nav-type-vertical .layout-vertical-nav .nav-link > :first-child,
+.layout-nav-type-vertical .layout-vertical-nav .nav-group > :first-child {
+  border-radius: 3px !important;
+}
