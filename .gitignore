@@ -43,3 +43,4 @@ BROADCASTING_SETUP.md
 sonar-project.properties
 .scannerwork/
 .env
+sonar-project-otic.properties
