@@ -1,6 +1,7 @@
 <script setup>
 import { useAuthApp } from '@/composables/useAuthApp'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useKeycloak } from '@/composables/useKeycloak'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import { default as authV2LoginIllustrationDark, default as authV2LoginIllustrationLight } from '@images/coes/auth-login-illustration-light.png'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
@@ -19,8 +20,10 @@ definePage({
 })
 
 const { login, writeCookies, getCookies, loading, getPermissions } = useAuthApp()
+const { loginWithKeycloak } = useKeycloak()
 const route = useRoute()
 const router = useRouter()
+const loadingKeycloak = ref(false)
 
 const refForm = ref()
 
@@ -74,6 +77,18 @@ const loginApp =  async () => {
     })
   } catch (error) {
     console.error('Login failed:', error)
+  }
+}
+
+const loginWithKeycloakApp = async () => {
+  loadingKeycloak.value = true
+  try {
+    await loginWithKeycloak()
+    // Si no hay error, keycloak.login() redirige la página
+  } catch (e) {
+    console.error('Keycloak login redirect failed:', e)
+  } finally {
+    loadingKeycloak.value = false
   }
 }
 </script>
@@ -190,6 +205,24 @@ const loginApp =  async () => {
                 >
                   Iniciar sesión
                 </VBtn>
+
+                <VCol cols="12">
+                  <VDivider class="my-2">
+                    <span class="text-body-2 text-medium-emphasis">o</span>
+                  </VDivider>
+                </VCol>
+
+                <VCol cols="12">
+                  <VBtn
+                    block
+                    variant="tonal"
+                    color="primary"
+                    :loading="loadingKeycloak"
+                    @click="loginWithKeycloakApp"
+                  >
+                    Iniciar sesión con Keycloak
+                  </VBtn>
+                </VCol>
               </VCol>
 
               <!-- create account -->

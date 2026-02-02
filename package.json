@@ -36,6 +36,8 @@
     "eslint-plugin-regexp": "2.7.0",
     "exceljs": "^4.4.0",
     "jwt-decode": "4.0.0",
+    "keycloak-js": "^26.0.0",
+    "keycloak-js": "^26.2.2",
     "laravel-echo": "^2.2.6",
     "leaflet": "^1.9.4",
     "mapbox-gl": "3.5.2",

@@ -21,6 +21,7 @@ declare module 'vue-router/auto-routes' {
     'root': RouteRecordInfo<'root', '/', Record<never, never>, Record<never, never>>,
     '$error': RouteRecordInfo<'$error', '/:error(.*)', { error: ParamValue<true> }, { error: ParamValue<false> }>,
     'alerts': RouteRecordInfo<'alerts', '/alerts', Record<never, never>, Record<never, never>>,
+    'callback': RouteRecordInfo<'callback', '/callback', Record<never, never>, Record<never, never>>,
     'educative-institutions-catalogs-area-type-ies': RouteRecordInfo<'educative-institutions-catalogs-area-type-ies', '/educativeInstitutions/catalogs/areaTypeIes', Record<never, never>, Record<never, never>>,
     'educative-institutions-catalogs-education-levels': RouteRecordInfo<'educative-institutions-catalogs-education-levels', '/educativeInstitutions/catalogs/educationLevels', Record<never, never>, Record<never, never>>,
     'educative-institutions-catalogs-form-attentions': RouteRecordInfo<'educative-institutions-catalogs-form-attentions', '/educativeInstitutions/catalogs/formAttentions', Record<never, never>, Record<never, never>>,
