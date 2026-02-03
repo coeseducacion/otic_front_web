@@ -4,7 +4,6 @@ import FilterForm from '@/components/Filters/FilterForm.vue'
 import { useAlerts } from '@/composables/alertIEs/useAlert'
 import { nextTick, onMounted, ref } from 'vue'
 import DetailAlert from './DetailAlert.vue'
-import FormAlert from './FormAlert.vue'
 
 const { getAlerts, deleteAlert, patchAlert, loading } = useAlerts()
 const { hasPermission } = useVerifyPermissions()
@@ -199,7 +198,7 @@ const capitalizeWords = (str) => {
     />
 
     <FilterForm :columns="headers" @apply-filters="applyFilters($event)" />
-    <VTooltip text="Agregar" v-if="hasPermission('Create')">
+    <!-- <VTooltip text="Agregar" v-if="hasPermission('Create')">
       <template #activator="{ props }">
         <VBtn
           v-bind="props"
@@ -210,7 +209,7 @@ const capitalizeWords = (str) => {
           @click="addAlert"
         />
       </template>
-    </VTooltip>
+    </VTooltip> -->
     <VTooltip text="Imprimir" v-if="hasPermission('List')">
       <template #activator="{ props }">
         <VBtn
@@ -396,11 +395,11 @@ const capitalizeWords = (str) => {
   </VDataTable>
 
 </AppCardActions>
-<FormAlert
+<!-- <FormAlert
   v-model:is-dialog-visible="isDialogVisible"
   v-model:data="alert"
   @onSaved:data="insertOrUpdateAlert($event)"
-/>
+/> -->
 <DetailAlert
   :alert="alert"
   v-model:is-dialog-visible="isDialogDetailVisible"

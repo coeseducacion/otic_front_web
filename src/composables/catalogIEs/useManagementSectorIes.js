@@ -23,9 +23,9 @@ export const useManagementSectorIes = () => {
     //   console.log('Response modules:', response)
       return response.data
     } catch (err) {
-      console.error('Error al obtener los datos de sesión:', err)
+      console.error('Error al obtener sectores de gestión de IES:', err)
       // ✅ Notificación de error
-      notify.error(err.response?.data?.message || 'Error al iniciar sesión', 4000)
+      notify.error(err.response?.data?.message || 'Error al obtener sectores de gestión de IES', 4000)
       
       throw err
     } finally {

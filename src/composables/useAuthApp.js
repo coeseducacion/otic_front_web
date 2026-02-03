@@ -1,3 +1,4 @@
+import { useCookie } from '@/@core/composable/useCookie'
 import { api } from '@/plugins/axios'
 import { notify } from '@/plugins/notify'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -98,6 +99,8 @@ export const useAuthApp = () => {
     useCookie('accessToken').value = null
     useCookie('userData').value = null
     useCookie('userPermissions').value = null
+    useCookie ('expires_in').value = null
+    useCookie ('getTimeToken').value = null
   }
 
   const getCookies = () => {
@@ -147,7 +150,7 @@ export const useAuthApp = () => {
 
       // console.log('Access Data in getPermissions:', accessData)
       // eslint-disable-next-line camelcase
-      const params = { user_id: accessData.userData.id, module_id: 1 }
+      const params = { user_id: accessData.userData.id, module_id: 1,sub: accessData.userData.sub }
       const token = accessData.accessToken
 
       loading.value = true
