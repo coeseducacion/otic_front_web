@@ -2,6 +2,7 @@
 import { useKeycloak } from '@/composables/useKeycloak'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { notify } from '@/plugins/notify'
+import { useAuthApp } from '@/composables/useAuthApp'
 
 definePage({
   meta: {
@@ -10,6 +11,7 @@ definePage({
   },
 })
 
+const useAuthAppinstance = useAuthApp()
 const router = useRouter()
 const { initKeycloak, getToken, getTokenParsed, getUserInfo } = useKeycloak()
 const authStore = useAuthStore()
@@ -36,7 +38,8 @@ onMounted(async () => {
     } catch (_) {
       // usar solo tokenParsed si loadUserInfo falla
     }
-
+    //obtenemos los datos del usuario de service auth
+console.log('usuario Obtenido del service auth:', await useAuthAppinstance.getUserBySub(userInfo.sub))
     // Formato compatible con el resto de la app (cookies + store)
     const userData = {
       id: null,

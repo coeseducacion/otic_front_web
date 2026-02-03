@@ -203,7 +203,7 @@ onMounted(async()=>{
       // console.log('Response selectes:', response)
       return response.data
     } catch (err) {
-      console.error('Error al obtener los datos de sesión:', err)
+      console.error('Error al obtener los datos:', err)
       // ✅ Notificación de error
       // notify.error(err.response?.data?.message || 'Error al iniciar sesión', 4000)
       

@@ -4,9 +4,17 @@ import FilterForm from '@/components/Filters/FilterForm.vue'
 import { useAlerts } from '@/composables/alertIEs/useAlert'
 import { nextTick, onMounted, ref } from 'vue'
 import DetailAlert from './DetailAlert.vue'
+import SingleSelect from '@/components/selects/SingleSelect.vue'
+import SelectDreUgel from '@/components/accesDreUgel/SelectDreUgel.vue'
+
+
+
 
 const { getAlerts, deleteAlert, patchAlert, loading } = useAlerts()
+
+
 const { hasPermission } = useVerifyPermissions()
+
 
 const alerts = ref()
 const alert = ref({
@@ -32,7 +40,7 @@ const alert = ref({
   guest_phone: '',
 })
 
-
+const dresAccess = ref([]);
 const deleteQuestion = ref(false)
 const isDialogVisible = ref(false)
 const isDialogDetailVisible = ref(false)
@@ -73,8 +81,9 @@ const headers = [
 ]
 
 onMounted(async () => {
+  
   if (hasPermission('List')) { // si tiene permiso de listado carga los datos de la api
-    await get()
+    //await get()
   }
 })
 
@@ -175,6 +184,15 @@ const capitalizeWords = (str) => {
   return str.replace(/\b\w/g, char => char.toUpperCase());
 };
 
+
+
+
+
+// url base de la api de priorizaciones
+// const baseUrlPriorization=import.meta.env.VITE_API_SEMOVA_URL;
+const baseUrlCoes=import.meta.env.VITE_API_COES_URL;
+console.log('Base URL COES:', baseUrlCoes);
+
 </script>
 
 <template>
@@ -185,31 +203,21 @@ const capitalizeWords = (str) => {
 >
   <template #before-actions>
     <div class="d-flex flex-wrap ga-2" >
-      <VTextField v-if="hasPermission('List')"
-      style="float: inline-start;inline-size: 200px;"
-      variant="solo"
-      placeholder="Buscar..."
-      density="compact"
-      prepend-inner-icon="tabler-search"
-      v-model="params.search.value"
-      clearable
-      @keyup.enter="get()"
-      @click:clear="get()"
-    />
+        <SelectDreUgel/>
+    <VTextField v-if="hasPermission('List')"
+          style="float: inline-start;inline-size: 200px;"
+          variant="solo"
+          placeholder="Buscar..."
+          density="compact"
+          prepend-inner-icon="tabler-search"
+          v-model="params.search.value"
+          clearable
+          @keyup.enter="get()"
+          @click:clear="get()"
+        />
 
     <FilterForm :columns="headers" @apply-filters="applyFilters($event)" />
-    <!-- <VTooltip text="Agregar" v-if="hasPermission('Create')">
-      <template #activator="{ props }">
-        <VBtn
-          v-bind="props"
-          size="small"
-          color="success"
-          icon="tabler-square-plus"
-          rounded
-          @click="addAlert"
-        />
-      </template>
-    </VTooltip> -->
+
     <VTooltip text="Imprimir" v-if="hasPermission('List')">
       <template #activator="{ props }">
         <VBtn

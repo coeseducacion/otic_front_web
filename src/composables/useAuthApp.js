@@ -8,7 +8,7 @@ export const useAuthApp = () => {
   const loading = ref(false)
   const authStore = useAuthStore()
 
-  const login = async params => {
+  const login = async (params) => {
     try {
       loading.value = true
 
@@ -34,7 +34,7 @@ export const useAuthApp = () => {
     }
   }
 
-  const refreshToken = async params => {
+  const refreshToken = async (params) => {
     try {
       loading.value = true
 
@@ -63,7 +63,7 @@ export const useAuthApp = () => {
     }
   }
   
-  const register = async params => {
+  const register = async (params) => {
     try {
       loading.value = true
 
@@ -93,6 +93,30 @@ export const useAuthApp = () => {
     useCookie('accessToken').value = accessToken
     useCookie('userData').value = userData
     useCookie('userPermissions').value = userPermissions
+  }
+
+  const getUserBySub = async (sub) => {
+    try {
+      const accessData = getCookies()
+      loading.value = true
+      let params = { filters:[
+        { field: 'sub', operator: '=', value: sub }
+      ] }
+      const response = await api.post(`/users/search`, params, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${accessData.accessToken}`,
+        },
+      })
+            
+      return response.data.data[0] || null
+    } catch (err) {
+      console.error('Error en el registro:', err)
+            
+      return err
+    } finally {
+      loading.value = false
+    }
   }
 
   const clearCookies = () => {
@@ -187,5 +211,6 @@ export const useAuthApp = () => {
     logout,
     getPermissions,
     refreshToken,
+    getUserBySub,
   }
 }
