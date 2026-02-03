@@ -5,13 +5,18 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import avatar1 from '@images/avatars/avatar-1.png'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useKeycloak } from '@/composables/useKeycloak'
 
-const { logout } = useAuthApp()
+const { clearCookies } = useAuthApp()
 const authStore = useAuthStore()
 const router = useRouter()
+const { logoutKeycloak } = useKeycloak()
 
 const handleLogout = async () => {
-  await logout()
+  await Promise.all([
+    logoutKeycloak(),clearCookies()
+  ])
+  authStore.clearAuth()     
   router.push('/login')
 }
 
@@ -86,11 +91,11 @@ onMounted(() => {
               />
             </template>
 
-            <VListItemTitle>Profile</VListItemTitle>
+            <VListItemTitle>Perfil</VListItemTitle>
           </VListItem>
 
           <!-- 👉 Settings -->
-          <VListItem link>
+          <!--<VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -100,10 +105,10 @@ onMounted(() => {
             </template>
 
             <VListItemTitle>Settings</VListItemTitle>
-          </VListItem>
+          </VListItem>-->
 
           <!-- 👉 Pricing -->
-          <VListItem link>
+          <!--<VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -113,10 +118,10 @@ onMounted(() => {
             </template>
 
             <VListItemTitle>Pricing</VListItemTitle>
-          </VListItem>
+          </VListItem>-->
 
           <!-- 👉 FAQ -->
-          <VListItem link>
+          <!--<VListItem link>
             <template #prepend>
               <VIcon
                 class="me-2"
@@ -126,7 +131,7 @@ onMounted(() => {
             </template>
 
             <VListItemTitle>FAQ</VListItemTitle>
-          </VListItem>
+          </VListItem>-->
 
           <!-- Divider -->
           <VDivider class="my-2" />

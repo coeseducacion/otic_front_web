@@ -1,6 +1,7 @@
 import axios from 'axios'
-
-//import { useAuthStore } from '@/stores/useAuthStore'
+// Note: avoid importing composables at module initialization to prevent
+// circular dependency issues (composables may import `api` from this file).
+// We'll import composables lazily inside interceptors when needed.
 
 // Configuración base de la API
 const api = axios.create({
@@ -31,27 +32,39 @@ api.interceptors.request.use(
 )
 
 // Interceptor de respuestas - Manejar errores
-/*api.interceptors.response.use(
+api.interceptors.response.use(
   (response) => {
     return response
   },
-  (error) => {
+  async (error) => {
     // Manejar errores de autenticación
     if (error.response?.status === 401) {
       // Token inválido o expirado
-      const authStore = useAuthStore()
-      authStore.logout()
+      try {
+        const { useAuthApp } = await import('@/composables/useAuthApp')
+        const { useKeycloak } = await import('@/composables/useKeycloak')
+
+        const { clearCookies } = useAuthApp()
+        const { logoutKeycloak } = useKeycloak()
+
+        clearCookies()
+        logoutKeycloak()
+      } catch (e) {
+        // If lazy import fails (should be rare), fallback to clearing local token
+        localStorage.removeItem('token')
+      }
+
       window.location.href = '/login'
     }
-    
+
     // Manejar errores de permisos
     if (error.response?.status === 403) {
       window.location.href = '/unauthorized'
     }
-    
+
     return Promise.reject(error)
   }
-)*/
+)
 
 // Plugin para Vue
 export default function (app) {

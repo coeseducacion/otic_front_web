@@ -145,124 +145,33 @@ const loginWithKeycloakApp = async () => {
         :max-width="500"
         class="mt-12 mt-sm-0 pa-6"
       >
+      <VCardTitle>
+        <span class="text-h4 text-capitalize">{{ themeConfig.app.title }}</span>
+      </VCardTitle>
         <VCardText>
-          <h4 class="text-h4 mb-1">
-            Bienvenido <span class="text-capitalize">{{ themeConfig.app.title }}</span>! 👋🏻
+          <h4 class=" mb-1">
+            Bienvenido  nuevamente!
           </h4>
           <p class="mb-0">
             Por favor, inicie sesión en su cuenta...
           </p>
         </VCardText>
         <VCardText>
-          <VForm
-            ref="refForm"
-            @submit.prevent="loginApp"
-          >
-            <VRow>
-              <!-- document -->
-              <VCol cols="12">
-                <AppTextField
-                  v-model="form.document"
-                  autofocus
-                  label="Documento"
-                  type="text"
-                  persistent-placeholder
-                  placeholder="Ingrese su documento"
-                  :rules="[requiredValidator('El documento')]"
-                />
-              </VCol>
-
-              <!-- password -->
-              <VCol cols="12">
-                <AppTextField
-                  v-model="form.password"
-                  label="Contraseña"
-                  placeholder="Ingrese su contraseña"
-                  :type="isPasswordVisible ? 'text' : 'password'"
-                  autocomplete="password"
-                  :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  :rules="[requiredValidator('La contraseña')]"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                />
-
-                <div class="d-flex align-center flex-wrap justify-space-between my-6">
-                  <VCheckbox
-                    v-model="form.remember"
-                    label="Recuérdame"
-                  />
-                  <a
-                    class="text-primary"
-                    href="javascript:void(0)"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </a>
-                </div>
-
-                <VBtn
-                  block
-                  type="submit"
-                  :loading="loading"
-                >
-                  Iniciar sesión
-                </VBtn>
-
-                <VCol cols="12">
-                  <VDivider class="my-2">
-                    <span class="text-body-2 text-medium-emphasis">o</span>
-                  </VDivider>
-                </VCol>
-
-                <VCol cols="12">
-                  <VBtn
+           <VBtn
                     block
+                    height="100"
                     variant="tonal"
                     color="primary"
                     :loading="loadingKeycloak"
                     @click="loginWithKeycloakApp"
                   >
-                    Iniciar sesión con Keycloak
+                  
+                    Iniciar sesión
+                    <VIcon
+                      size="30"
+                      class="me-2"
+                      icon="tabler-door-enter"></VIcon>
                   </VBtn>
-                </VCol>
-              </VCol>
-
-              <!-- create account -->
-              <VCol
-                cols="12"
-                class="text-body-1 text-center"
-              >
-                <span class="d-inline-block">
-                  ¿Eres nuevo?
-                </span>
-                <RouterLink
-                  class="text-primary font-weight-bold ms-1 d-inline-block"
-                  :to="{ name: 'register' }"
-                >
-                  Crear una cuenta
-                </RouterLink>
-              </VCol>
-
-              <!--
-                <VCol
-                cols="12"
-                class="d-flex align-center"
-                >
-                <VDivider />
-                <span class="mx-4">o</span>
-                <VDivider />
-                </VCol> 
-              -->
-
-              <!-- auth providers -->
-              <!--
-                <VCol
-                cols="12"
-                class="text-center"
-                >
-                <AuthProvider />
-                </VCol> 
-              -->
-            </VRow>
-          </VForm>
         </VCardText>
       </VCard>
     </VCol>
