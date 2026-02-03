@@ -59,6 +59,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ScrollToTop: typeof import('./src/@core/components/ScrollToTop.vue')['default']
+    SelectDreUgel: typeof import('./src/components/accesDreUgel/SelectDreUgel.vue')['default']
     ShareProjectDialog: typeof import('./src/components/dialogs/ShareProjectDialog.vue')['default']
     Shortcuts: typeof import('./src/@core/components/Shortcuts.vue')['default']
     SingleSelect: typeof import('./src/components/selects/SingleSelect.vue')['default']
