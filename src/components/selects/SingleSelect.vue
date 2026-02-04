@@ -12,14 +12,15 @@
                 :rules="props.rules"
                 no-filter
                 variant="solo"
-                :no-data-text="searchValue ? 'No se encontraron resultados' : 'Escribe para buscar...'"
+                :no-data-text="props.noDataText"
                 return-object
                 @update:model-value="setItemSelected($event)"
                 :clearable="props.clearable"
                 :multiple="props.multiple"
                 :chips="props.chips"
                 :closable-chips="props.closableChips"
-                :disabled="loading && !searchValue"
+                :disabled="props.disabled || (loading && !searchValue)"
+                
               />
   <VAutocomplete v-else
                 v-model="vModel"
@@ -28,16 +29,17 @@
                 :label="props.label"
                 :items="items"
                 :item-value="props.itemValue"
-                :item-title="props.itemTitle"
+                :item-title="props.concatValues.length ? getConcatValues : props.itemTitle"
                 :loading="loading"
                 :rules="props.rules"
                 no-filter
                 variant="solo"
-                :no-data-text="searchValue ? 'No se encontraron resultados' : 'Escribe para buscar...'"
+                :no-data-text="props.noDataText"
                 return-object
                 @update:model-value="setItemSelected($event)"
-                clearable
-                :disabled="loading && !searchValue"
+                :clearable="props.clearable"
+                :disabled="props.disabled || (loading && !searchValue)"
+                
               />
   
 </template>
@@ -46,7 +48,7 @@ import AppAutocomplete from '@/@core/components/app-form-elements/AppAutocomplet
 import { useAuthApp } from '@/composables/useAuthApp'
 import { api } from '@/plugins/axios'
 import { useDebounce } from '@/utils/debounce'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 // eventos a emitir: update:model-value
 const emit = defineEmits(['update:model-value'])
@@ -78,10 +80,25 @@ const props = defineProps({
     required: false,
     default: 'name'
   },
+  disabled: {//si es true, el select estará deshabilitado
+    type: Boolean,
+    required: false,
+    default: false
+  },
   label: {//etiqueta del select
     type: String,
     required: false,
     default: 'Seleccionar'
+  },
+  itemsLimit: {//límite de items a obtener
+    type: Number,
+    required: false,
+    default: 15
+  },
+  itemsSortFields:{//campos por el que se ordenarán los items
+    type: Array,
+    required: false,
+    default: () => []
   },
   getDefault:{//si es true, obtiene los datos al montar el componente
     type:Boolean,
@@ -128,6 +145,11 @@ chips: {//si es true, el select será multiple y mostrará chips
     required: false,
     default: false
   },
+  noDataText: {//texto a mostrar cuando no hay datos
+    type: String,
+    required: false,
+    default: 'No se encontraron resultados'
+  },
 })
 
 const searchValue=ref('')
@@ -136,8 +158,16 @@ const item=ref()
 const items = ref([])
 const vModel=ref(null)
 
+
 // Crear función debounced para getDataFromApi
 const debouncedSearch = useDebounce(async () => {
+  if(searchValue.value===''){
+    //verificamos si tiene el getDefault activado
+    if(props.getDefault){
+      await getDataFromApi()
+    }
+    return
+  }
   await getDataFromApi()
 }, 500)
 
@@ -151,33 +181,20 @@ onMounted(async()=>{
   const getDataFromApi = async () => {
     // console.log('Fetching data with search:', searchValue.value)
     try {
-      
+      //construyendo params
       const params = {
-        search: { value: searchValue.value }
+        search: { value: searchValue.value },
+
       }
-      //verificamos si ha seleccionado algo
+      //verificamos si ha seleccionado algo para evitar peticiones innecesarias
       if(item.value){
-        //verificamos si existe concatValues
-        if(props.concatValues && props.concatValues.length > 0){
-          //obtenemos el valor concatenado del item seleccionado
-          const concatenatedValue = props.concatValues
-            .map(field => item.value[field])
-            .filter(value => value !== null && value !== undefined && value !== '')
-            .join(props.concatCharacter)
-          //comparamos si el valor concatenado es igual al searchValue
-          if( concatenatedValue === searchValue.value){
-            // console.log('identificamos que el el losefocus por concat ')
-            return
-          }
-        }
-        //existe algun item seleccionado
-        if( searchValue.value===''){
-          //este search cambia por el lose focus pero si ya tienes un item seleccionado detiene la petición
-          return
-        }
-        // verificamos si el items eleccionado es igual al searchValue
-        if(item.value[props.itemTitle] === searchValue.value){
-          // console.log('identificamos que el el losefocus ')
+        // Obtenemos el título usando la misma lógica que getConcatValues
+        const currentTitle = props.concatValues && props.concatValues.length > 0 
+          ? getConcatValues.value(item.value)
+          : item.value[props.itemTitle]
+        
+        if(currentTitle === searchValue.value || searchValue.value === ''){
+          // console.log('Evitando petición: el valor buscado coincide con el item seleccionado o está vacío')
           return
         }
       }
@@ -190,10 +207,14 @@ onMounted(async()=>{
       if (props.filters) {
         params.filters = props.filters
       }
+      // verificamos si tiene sortFields
+      if (props.itemsSortFields && props.itemsSortFields.length > 0) {
+        params.sort = props.itemsSortFields
+      }
 
       loading.value = true
       const accessData=  getCookies()
-      const response = await api.post(`${props.urlApi}/search?&limit=30`, params, {
+      const response = await api.post(`${props.urlApi}/search?&limit=${props.itemsLimit}`, params, {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${accessData.accessToken}`,
@@ -203,7 +224,7 @@ onMounted(async()=>{
       // console.log('Response selectes:', response)
       return response.data
     } catch (err) {
-      console.error('Error al obtener los datos:', err)
+      console.error('Error al obtener los datos de sesión:', err)
       // ✅ Notificación de error
       // notify.error(err.response?.data?.message || 'Error al iniciar sesión', 4000)
       
@@ -213,6 +234,11 @@ onMounted(async()=>{
     }
   }
   
+//funcion para limpiar el item actual
+  //funcion para limpiar todos los resultados
+  const clearAllItems = () => {
+    items.value = []
+  }
 
 
   const setItemSelected = (newItem) => {
@@ -227,8 +253,12 @@ const getConcatValues = computed(() => {
     if (!item || !props.concatValues || props.concatValues.length === 0) {
       return item?.[props.itemTitle] || ''
     }
+
     return props.concatValues
-      .map(field => item[field])
+      .map(field => {
+        // Resolve nested properties (e.g., 'province.name')
+        return field.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : undefined, item)
+      })
       .filter(value => value !== null && value !== undefined && value !== '')
       .join(props.concatCharacter)
   }
@@ -241,9 +271,21 @@ const setSelectedValue = (newValue) => {
   emit('update:model-value', item.value)
 }
 
+//funcion para insertar items al select
+const setItems = (newItems) => {
+  items.value = newItems
+}
+//funcion para obtener todos los items actuales
+const getAllItems = () => {
+  return items.value
+}
+
 defineExpose({
   getDataFromApi,
-  setSelectedValue
+  getAllItems,
+  setSelectedValue,
+  clearAllItems,
+  setItems
 })
 
 </script>

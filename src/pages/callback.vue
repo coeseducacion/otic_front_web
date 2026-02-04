@@ -39,19 +39,12 @@ onMounted(async () => {
       // usar solo tokenParsed si loadUserInfo falla
     }
     //obtenemos los datos del usuario de service auth
-console.log('usuario Obtenido del service auth:', await useAuthAppinstance.getUserBySub(userInfo.sub))
+    const userDataServiceAuth = await useAuthAppinstance.getUserBySub(userInfo.sub)
+
     // Formato compatible con el resto de la app (cookies + store)
-    const userData = {
-      id: null,
-      sub: userInfo.sub,
-      email: userInfo.email ?? userInfo.preferred_username,
-      preferred_username: userInfo.preferred_username,
-      name: userInfo.name ?? userInfo.preferred_username,
-    }
-console.log('User info from Keycloak:', userData)
-//consulatamos a la BD si existe un usuario con este sub
+    const userData = { ...userDataServiceAuth }
 
-
+    //consultamos a la BD si existe un usuario con este sub
     useCookie('accessToken').value = token
     useCookie('userData').value = userData
     useCookie('userPermissions').value = ''

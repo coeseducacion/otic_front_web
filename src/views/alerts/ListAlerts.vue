@@ -4,14 +4,19 @@ import FilterForm from '@/components/Filters/FilterForm.vue'
 import { useAlerts } from '@/composables/alertIEs/useAlert'
 import { nextTick, onMounted, ref } from 'vue'
 import DetailAlert from './DetailAlert.vue'
-import SingleSelect from '@/components/selects/SingleSelect.vue'
 import SelectDreUgel from '@/components/accesDreUgel/SelectDreUgel.vue'
+import AlertHistories from './alertHistories/AlertHistories.vue'
+import MenuAlertHistories from './alertHistories/MenuAlertHistories.vue'
+import { useAlertStatuses } from '@/composables/catalogAlerts/useAlertStatuses'
+import { useAlertHistories } from '@/composables/catalogAlerts/useAlertHistories'
+
 
 
 
 
 const { getAlerts, deleteAlert, patchAlert, loading } = useAlerts()
-
+const { getAlertStatuses, loading: loadingAlertStatuses } = useAlertStatuses()
+const { createAlertHistory, loading:loadingAlertHistory } = useAlertHistories()
 
 const { hasPermission } = useVerifyPermissions()
 
@@ -40,11 +45,14 @@ const alert = ref({
   guest_phone: '',
 })
 
-const dresAccess = ref([]);
+const dreSelected = ref([])
+const ugelSelected = ref([])
 const deleteQuestion = ref(false)
 const isDialogVisible = ref(false)
 const isDialogDetailVisible = ref(false)
+const isDialogHistoryVisible = ref(false)
 const showPdfDialog = ref(false)
+const alertStatuses = ref([])
 
 const params = ref({
   search: { value: '' },
@@ -53,11 +61,15 @@ const params = ref({
     { relation: 'district.province.region' },
     { relation: 'evidences' },
     { relation: 'user.rol' },
-    { relation: 'alertEducativeInstitutions.IE.educationLevel' }
+    { relation: 'alertEducativeInstitutions.IE.educationLevel' },
+    { relation: 'statusHistories.alertStatus' },
   ],
   sort : [
         {field : 'id', direction : 'desc'}
-  ]
+  ],
+  filters : [
+    ]
+
 })
 const pdfUrl = ref('')
 const options = ref({
@@ -75,19 +87,24 @@ const headers = [
   { title: 'Provincia', key: 'district.province.name', filterColumnName:'district.province.name', sortable: false, filterable: true },
   { title: 'Distrito', key: 'district.name', filterColumnName:'district.name', sortable: false, filterable: true },
   { title: 'I.E.', key: 'i_e', filterColumnName:'alertEducativeInstitutions.IE.name_ie' ,sortable: false, filterable: true },
-  { title: 'Resuelto', key: 'is_resolved', filterColumnName:'is_resolved', sortable: false, filterable: true },
-  { title: 'Estado', key: 'is_active', filterColumnName:'is_active', sortable: false, filterable: true },
+  { title: 'Estado', key: 'status', filterColumnName:'status' ,sortable: false, filterable: true },
+  
   { title: '', key: 'actions', sortable: false, filterable: false },
 ]
 
 onMounted(async () => {
-  
+  //obtener la lista de estados alerta para el menu
   if (hasPermission('List')) { // si tiene permiso de listado carga los datos de la api
+    alertStatuses.value = await getAlertStatuses()
+    console.log('✅ Estados de alerta cargados:', alertStatuses.value)
     //await get()
   }
+
 })
 
-const get = async () => {
+
+
+const getAlertsData = async () => {
   try {
     alerts.value = await getAlerts(params.value, options.value.itemsPerPage, options.value.page)
     console.log('✅ Alertas cargadas:', alerts.value)
@@ -162,10 +179,11 @@ const deletedAlert = async () => {
 
 const applyFilters = async (filters) => {
   params.value.filters = filters
-  await get()
+  await getAlertsData()
 }
 //funcion para abrir el pdf en otra pestaña
-const getPdfAlert = (alrt) => {
+const getPdfAlert = (alrt,index) => {
+    updateStatusHistory(alrt,index)
   // obtenemos la base url de la api y le agregamos el endpoint para obtener el pdf
   const pdfUrlTemp = `${import.meta.env.VITE_API_BASE_URL}/alerts/${alrt.id}/pdf`
   // window.open(pdfUrlTemp, '_blank')
@@ -175,7 +193,13 @@ const getPdfAlert = (alrt) => {
   // console.log('PDF URL:', pdfUrl.value) 
   showPdfDialog.value = true
 }
+//funcion que abre detalles
+const detailsOpen = (alrt,index) => {
 
+  updateStatusHistory(alrt,index)
+  isDialogDetailVisible.value = true
+  alert.value = alrt
+}
 //funcion para colocar en mayusculas la primera letra de cada palabra
 const capitalizeWords = (str) => {
   //volver siempre a minusucolas todo
@@ -184,14 +208,41 @@ const capitalizeWords = (str) => {
   return str.replace(/\b\w/g, char => char.toUpperCase());
 };
 
+const onUgelSelected = (val) => {
+  ugelSelected.value = val
+  if(val !== null && val !== undefined){
+    params.value.filters = [
+    {
+      field: 'alertEducativeInstitutions.IE.ugel_id',
+      operator: '=',
+      value: val && val.id ? val.id : null
+    }
+    ]
+  }else{
+    params.value.filters = []
+  }
+  getAlertsData()
+}
 
-
+const updateStatusHistory = async (alert,index) => {
+  //buscamos en el historial de estados si el estado "Leído" (id 2) ya existe
+  let existsReadStatus= alert.status_histories.some(history => history.alert_status_id === 2)
+  if (existsReadStatus){
+      return
+  }
+  const newAlertHistory = await createAlertHistory({
+    alert_id: alert.id,
+    alert_status_id: 2,
+  })
+  //actualizar la lista de estados en el alert mostrado
+  alerts.value.data[index].status_histories.push(newAlertHistory.data || newAlertHistory)
+}
 
 
 // url base de la api de priorizaciones
 // const baseUrlPriorization=import.meta.env.VITE_API_SEMOVA_URL;
 const baseUrlCoes=import.meta.env.VITE_API_COES_URL;
-console.log('Base URL COES:', baseUrlCoes);
+
 
 </script>
 
@@ -203,7 +254,11 @@ console.log('Base URL COES:', baseUrlCoes);
 >
   <template #before-actions>
     <div class="d-flex flex-wrap ga-2" >
-        <SelectDreUgel/>
+    <SelectDreUgel 
+      @update:dre="dreSelected=$event"
+      @update:ugel="onUgelSelected($event)"
+      @access-data-loaded="getAlertsData()"
+      />
     <VTextField v-if="hasPermission('List')"
           style="float: inline-start;inline-size: 200px;"
           variant="solo"
@@ -212,8 +267,8 @@ console.log('Base URL COES:', baseUrlCoes);
           prepend-inner-icon="tabler-search"
           v-model="params.search.value"
           clearable
-          @keyup.enter="get()"
-          @click:clear="get()"
+          @keyup.enter="getAlertsData()"
+          @click:clear="getAlertsData()"
         />
 
     <FilterForm :columns="headers" @apply-filters="applyFilters($event)" />
@@ -260,6 +315,8 @@ console.log('Base URL COES:', baseUrlCoes);
     v-else-if="alerts?.data  && hasPermission('List')"
     :headers="headers"
     :items="alerts.data"
+    striped="even"
+    hover=""
     :items-per-page="options.itemsPerPage"
     height="calc(100vh - 300px)"
   >
@@ -282,86 +339,28 @@ console.log('Base URL COES:', baseUrlCoes);
       ? capitalizeWords(item.alert_educative_institutions[0].i_e.name_ie) : 'N/A' }}
   
   </template>
-  
-  <template #item.is_resolved="{ item }">
-    <!-- <VChip
-          class="mx-2"
-          :color="item.is_resolved ? 'success' : 'error'"
-          small
-        >
-          {{ item.is_resolved ? 'Sí' : 'No' }}
-        </VChip> -->
-        <VTooltip :text="item.is_resolved ? 'Resuelto' : 'No Resuelto'">
-      <template #activator="{ props }">
-        <VSwitch
-          v-bind="props"
-          :disabled="loading"
-          v-model="item.is_resolved"
-          :color="item.is_resolved ? 'success' : 'error'"
-          @update:model-value="patchAlert(item.id, { is_resolved: item.is_resolved })"
-        />
-      </template>
-    </VTooltip>
-  </template>
-  <template #item.is_active="{ item }">
-    <VTooltip :text="item.is_active ? 'Activo' : 'Inactivo'">
-      <template #activator="{ props }">
-        <VSwitch
-          v-bind="props"
-          :disabled="loading"
-          v-model="item.is_active"
-          :color="item.is_active ? 'success' : 'error'"
-          @update:model-value="patchAlert(item.id, { is_active: item.is_active })"
-        />
-      </template>
-    </VTooltip>
-  </template>
-  <template #item.actions="{ item }">  
-    
-<!-- grouped flat buttons con tooltip -->
-      <VBtnGroup variant="text" class="ms-3" rounded>
+  <template #item.status="{ item }">
+    <VChip size="small" 
+    :color="item.status_histories.length > 0
+        ? (item.status_histories[item.status_histories.length - 1].alert_status.st_class) : 'grey' " text-color="white">
+      {{ item.status_histories.length > 0
+        ? (item.status_histories[item.status_histories.length - 1].alert_status.name) : 'N/A' }}
         
-    <!-- <VMenu location="left">
-      <template #activator="{ props }">
-        <VBtn v-bind="props"
-              size="x-small"
-              color="info"
-              variant="text" >
-          <VIcon v-bind="props">tabler-circle-arrow-right</VIcon>
-        </VBtn>
-      </template>
-
-      <VList >
-        <VListItem
-          v-if="hasPermission(['Edit'])"
-          @click="isDialogDetailVisible = true; alert = item"
-        >
-          <VListItemTitle>
-            <VIcon size="xs" >tabler-file-description</VIcon>
-            Detalles
-          </VListItemTitle>
-        </VListItem>
-        <VListItem
-          v-if="hasPermission(['Edit'])"
-          @click="editAlert(item)"
-        >
-          <VListItemTitle>
-            <VIcon size="xs" >tabler-pdf</VIcon>
-            Ver PDF
-          </VListItemTitle>
-        </VListItem>
-        </VList>
-
-    </VMenu>  -->
+    </VChip>
+  </template>
+  
+  <template #item.actions="{ item, index }">  
+      <div class="d-flex justify-end">
+        <VBtnGroup 
+              class="ms-3" rounded="" density="comfortable" >
+           <MenuAlertHistories @on-added:alert-status-history="item.status_histories.push($event)" :list-statuses="alertStatuses.data" :alert-status-histories="item.status_histories"  />
         <VTooltip text="Detalles">
           <template #activator="{ props }">
             <VBtn 
               v-bind="props"
-              size="small"
-              variant="text"
               icon="tabler-file-description"
               color="success"
-              @click="isDialogDetailVisible = true; alert = item"
+              @click="detailsOpen(item,index)"
             />
           </template>
         </VTooltip>
@@ -370,15 +369,24 @@ console.log('Base URL COES:', baseUrlCoes);
           <template #activator="{ props }">
             <VBtn
               v-bind="props"
-              size="small"
-              variant="text"
               icon="tabler-file-type-pdf"
-              color="error"
-              @click="getPdfAlert(item)"
+              color="primary"
+              @click="getPdfAlert(item,index)"
+            />
+          </template>
+        </VTooltip>
+        <VTooltip text="Historial" >
+          <template #activator="{ props }">
+            <VBtn
+              v-bind="props"
+              icon="tabler-history"
+              color="info"
+              @click="isDialogHistoryVisible = true; alert = item"
             />
           </template>
         </VTooltip>
       </VBtnGroup>
+      </div>
     </template>
     <template #bottom>
       <VCardText class="pt-2">
@@ -389,13 +397,13 @@ console.log('Base URL COES:', baseUrlCoes);
             label="Filas:"
             variant="underlined"
             style="max-inline-size: 4rem;min-inline-size: 2rem;"
-            @update:model-value="options.page=1; get()"
+            @update:model-value="options.page=1; getAlertsData()"
           />
           <VPagination
             v-model="options.page"
             :total-visible="$vuetify.display.smAndDown ? 3 : 4"
             :length="alerts?.meta.last_page"
-            @update:model-value="get()"
+            @update:model-value="getAlertsData()"
           />
         </div>
       </VCardText>
@@ -440,6 +448,6 @@ console.log('Base URL COES:', baseUrlCoes);
   :pdf-url="pdfUrl"
   :title="`Alerta MINEDU : ${ alert && alert.id ? String(alert.id).padStart(4, '0') : '' } - ${ alert && alert.date ? String(alert.date).split('T')[0].split('-')[0] : '' }`"
 />
-
+<AlertHistories :alert-data="alert" v-model:is-dialog-visible="isDialogHistoryVisible" />
 </template>
 
