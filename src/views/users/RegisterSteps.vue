@@ -100,7 +100,7 @@ const onSubmit = async () => {
     // guardar cookies
     writeCookies(response.token, response.user,'')
     // redirigir al home
-    window.location.href = '/'
+    // window.location.href = '/'
   } catch (error) {
     console.error('Registration failed:', error)
   }
